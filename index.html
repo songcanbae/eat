@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>饭点吃什么呢</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #5D4037;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #E65100;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 50px;
+            background:  linear-gradient(135deg, #ffffff, #E65100);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 6px rgba(121, 85, 72, 0.3);
+            font-size: 0.8rem;
+        }
+
+        .category-btn:hover {
+            background: #F57C00;
+            transform: translateY(-2px);
+        }
+
+        .category-btn.active {
+            background:  linear-gradient(135deg, #f1efed, #55a561);
+        }
+
+        .eat-btn-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .eat-btn {
+            padding: 12px 35px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #FF5722, #FF7043);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 12px rgba(255, 87, 34, 0.4);
+            animation: pulse 2s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* 图标和文字之间的间距 */
+            margin: 0 auto;
+        }
+
+        /* ========== 新增：加载动画图标样式 ========== */
+        .loading-icon {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none; /* 默认隐藏 */
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 按钮加载状态 */
+        .eat-btn.loading .loading-icon {
+            display: block; /* 显示加载图标 */
+        }
+
+        .eat-btn.loading span {
+            display: none; /* 隐藏文字 */
+        }
+
+        /* 可选：添加一个加载文字，如果需要可以显示在图标旁边 */
+        .eat-btn.loading::after {
+            content: '';
+            display: block;
+        }
+
+        /* 如果不想用::after，可以用下面的替代方案 */
+        .eat-btn.loading .btn-text {
+            display: none;
+        }
+
+        .eat-btn.loading .btn-loading-text {
+            display: block;
+        }
+
+        .btn-loading-text {
+            display: none;
+        }
+
+        /* ========== 新增加载动画样式结束 ========== */
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .eat-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(255, 87, 34, 0.5);
+        }
+
+        .eat-btn:active {
+            transform: translateY(1px);
+        }
+
+        .eat-btn:disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+            animation: none;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result-area {
+            text-align: center;
+            min-height: 100px;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result-food {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #FF5722;
+            align-items: center; /* 文本垂直居中 */
+        }
+
+        .no-result {
+            color: #795548;
+            font-style: italic;
+            font-size: 1rem;
+            align-items: center; /* 文本垂直居中 */
+        }
+
+        .food-list-container {
+            margin-top: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            border: 2px solid #FFECB3;
+        }
+
+        .food-list-title {
+            text-align: center;
+            color: #E65100;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        /* ========== 新增：按钮组样式（独占一行） ========== */
+        .food-actions {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: #E65100;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 45px;
+        }
+
+        .add-food-btn {
+            box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
+        }
+
+        .delete-food-btn {
+            box-shadow: 0 2px 5px rgba(255, 0, 0, 0.3);
+        }
+
+        .reset-food-btn {
+            box-shadow: 0 2px 5px rgba(0, 122, 255, 0.3);
+        }
+
+        .cancel-delete-btn {
+            background: linear-gradient(135deg, #f0f0f0, #bdbdbd);
+            color: #333 !important;
+            box-shadow: 0 2px 5px rgba(189, 189, 189, 0.3);
+        }
+
+        .confirm-delete-btn {
+            background: linear-gradient(135deg, #ffecec, #f89ca3);
+            box-shadow: 0 2px 5px rgba(255, 71, 87, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        /* ========== 新增按钮组样式结束 ========== */
+
+        .food-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .food-item {
+            padding: 10px 8px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: #5D4037;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 45px;
+            word-break: break-word;
+            line-height: 1.2;
+            cursor: pointer;
+        }
+
+        /* ========== 新增：删除标记样式 ========== */
+        .food-item.to-be-deleted {
+            background: #ffebee;
+            color: #ff4757;
+            border-color: #ff4757;
+        }
+
+        .delete-icon {
+            color: #ff4757;
+            margin-left: 5px;
+            font-size: 0.7rem;
+        }
+        /* ========== 新增删除标记样式结束 ========== */
+
+        .food-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 随机选择动画效果 */
+        .food-item.selecting {
+            animation: selectPulse 0.5s ease-in-out;
+            background: #c6ffc6;
+            border: 2px solid #ffffff;
+            transform: scale(1.05);
+        }
+
+        @keyframes selectPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .food-item.selected {
+            background: #c6ffc6;
+            border: 2px solid #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(1, 252, 14, 0.5);
+            animation: selectedBounce 0.8s;
+        }
+
+        @keyframes selectedBounce {
+            0%, 20%, 50%, 80%, 100% {transform: scale(1.1);}
+            40% {transform: scale(1.2);}
+            60% {transform: scale(1.15);}
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #FFECB3;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #FF5722, #FF9800);
+            transition: width 0.1s linear;
+        }
+
+        .status-text {
+            margin-top: 5px;
+            color: #795548;
+            font-size: 0.85rem;
+            min-height: 18px;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            color: #E65100;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #FFECB3;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .modal-input:focus {
+            border-color: #FF9800;
+        }
+
+        .modal-input.error {
+            border-color: #F44336;
+            background-color: #FFEBEE;
+        }
+
+        .modal-error {
+            color: #F44336;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            padding: 8px;
+            background-color: #FFEBEE;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+            font-weight: bold;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+        }
+
+        .modal-btn-cancel {
+            background: #BDBDBD;
+            color: white;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .modal-btn:active {
+            transform: translateY(0);
+        }
+
+        .modal-btn:disabled {
+            background: #E0E0E0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 15px;
+            color: #795548;
+            font-size: 0.75rem;
+        }
+
+        /* 小屏幕和超小屏幕优化 */
+        @media (max-width: 600px) {
+            .food-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+
+            .food-item, .action-btn {
+                font-size: 0.75rem;
+                min-height: 40px;
+                padding: 8px 6px;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .eat-btn {
+                padding: 10px 30px;
+                font-size: 1rem;
+            }
+
+            .result-food {
+              font-size: 1.4rem;
+              font-weight: bold;
+              animation: pulse 2s infinite;
+            }
+
+            .category-btn {
+                padding: 5px 10px;
+                font-size: 0.75rem;
+            }
+
+            .modal {
+                padding: 15px;
+            }
+
+            .modal-title {
+                font-size: 1.1rem;
+            }
+
+            .modal-input {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            .modal-error {
+                font-size: 0.85rem;
+                padding: 6px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            .food-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 5px;
+            }
+
+            .food-item, .action-btn {
+                font-size: 0.7rem;
+                min-height: 35px;
+                padding: 6px 4px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .eat-btn {
+                padding: 9px 25px;
+                font-size: 0.95rem;
+            }
+
+            .result-food {
+                font-size: 1.2rem;
+            }
+
+            .category-controls {
+                gap: 6px;
+            }
+
+            .category-btn {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+
+            .food-list-title {
+                font-size: 1rem;
+            }
+
+            .modal {
+                padding: 12px;
+            }
+
+            .modal-title {
+                font-size: 1rem;
+            }
+
+            .modal-input {
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+
+            .modal-error {
+                font-size: 0.8rem;
+                padding: 5px;
+            }
+
+            .modal-btn {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .food-list {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+            }
+
+            .food-item, .action-btn {
+                font-size: 0.65rem;
+                min-height: 30px;
+                padding: 5px 3px;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            .eat-btn {
+                padding: 8px 20px;
+                font-size: 0.9rem;
+            }
+
+            .result-food {
+                font-size: 1.1rem;
+            }
+
+            .category-btn {
+                padding: 3px 6px;
+                font-size: 0.65rem;
+            }
+
+            .modal-error {
+                font-size: 0.75rem;
+                padding: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>到饭点了，吃什么呢 🍽️</h1>
+        </header>
+
+        <div class="category-controls">
+            <button class="category-btn active" data-category="中餐">中餐</button>
+            <button class="category-btn" data-category="西餐">西餐</button>
+            <button class="category-btn" data-category="日料">日料</button>
+            <button class="category-btn" data-category="快餐">快餐</button>
+            <button class="category-btn" data-category="甜品">甜品</button>
+        </div>
+
+        <div class="eat-btn-container">
+            <!-- 修改：添加加载动画图标和文字容器 -->
+            <button class="eat-btn" id="eatBtn">
+                <div class="loading-icon"></div>
+                <span class="btn-text">吃什么呢</span>
+                <span class="btn-loading-text">随机选择中...</span>
+            </button>
+        </div>
+
+        <div class="result-area">
+            <div class="result-food no-result" id="resultFood">点击按钮决定吃什么</div>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="status-text" id="statusText">qwq</div>
+        </div>
+
+        <div class="food-list-container">
+            <div class="food-list-title" id="foodListTitle">中餐列表</div>
+
+            <!-- ========== 新增：按钮组容器 ========== -->
+            <div class="food-actions" id="foodActions">
+                <div class="action-btn add-food-btn" id="addFoodBtn">添加</div>
+                <div class="action-btn delete-food-btn" id="deleteFoodBtn">删除</div>
+                <div class="action-btn reset-food-btn" id="resetFoodBtn">重置</div>
+            </div>
+
+            <!-- ========== 新增：删除模式按钮组（默认隐藏） ========== -->
+            <div class="food-actions" id="deleteActions" style="display: none;">
+                <div class="action-btn cancel-delete-btn" id="cancelDeleteBtn">取消</div>
+                <div class="action-btn confirm-delete-btn" id="confirmDeleteBtn">确认删除</div>
+            </div>
+
+            <div class="food-list" id="foodList">
+                <!-- 美食列表将通过JS生成 -->
+            </div>
+        </div>
+
+        <footer>
+            <p>美味不重样，干饭有方向 @haooo</p>
+        </footer>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-title">添加美食</div>
+            <input type="text" class="modal-input" id="modalInput" placeholder="请输入美食名称">
+            <div class="modal-error" id="modalError"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" id="cancelBtn">取消</button>
+                <button class="modal-btn modal-btn-confirm" id="confirmBtn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 保存默认美食数据（用于重置）
+        const defaultFoodData = {
+            "中餐": ["牛肉粉", "羊肉粉","蹄花粉","螺蛳粉","砂锅粉", 
+					"新疆炒米粉","麻辣烫", "沙县小吃",  "啫啫煲", "土耳其烤肉", 
+					"老凯里", "猪脚饭", "鱼香肉丝拌饭", "宫爆鸡丁","自选菜",],
+
+            "西餐": ["披萨", "汉堡", "牛排", "意大利面", "沙拉",
+                    "三明治", "烤鸡翅", "焗饭", "奶油蘑菇汤", "意式肉酱面",
+                    "烤鸡", "牛排套餐", "意式烩饭", "法式吐司", "奶油培根意面"],
+
+            "日料": ["寿司", "拉面", "章鱼烧", "天妇罗", "饭团",
+                    "烤鳗鱼", "味增汤", "日式煎饺", "大阪烧", "日式咖喱饭",
+                    "乌冬面", "日式火锅", "照烧鸡排", "日式烤肉", "海鲜丼"],
+
+            "快餐": ["炸鸡", "薯条", "三明治", "热狗", "汉堡",
+                    "炸鱼薯条", "鸡肉卷", "蛋挞", "鸡米花", "蛋堡",
+                    "汉堡套餐", "炸鸡桶", "披萨块", "鸡肉三明治", "薯格"],
+
+            "甜品": ["蛋糕", "冰淇淋", "甜甜圈", "布丁", "奶茶",
+                    "芒果布丁", "提拉米苏", "泡芙", "蛋挞", "双皮奶",
+                    "杨枝甘露", "红豆沙", "绿豆沙", "芝士蛋糕", "巧克力慕斯"]
+        };
+
+        // 美食数据（按分类）- 初始化为默认数据的深拷贝
+        let foodData = JSON.parse(JSON.stringify(defaultFoodData));
+
+        // DOM元素
+        const eatBtn = document.getElementById('eatBtn');
+        const resultFood = document.getElementById('resultFood');
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const foodList = document.getElementById('foodList');
+        const foodListTitle = document.getElementById('foodListTitle');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const statusText = document.getElementById('statusText');
+
+        // 弹窗相关元素
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalInput = document.getElementById('modalInput');
+        const modalError = document.getElementById('modalError');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        // 新增：操作按钮元素
+        const foodActions = document.getElementById('foodActions');
+        const deleteActions = document.getElementById('deleteActions');
+        const addFoodBtn = document.getElementById('addFoodBtn');
+        const deleteFoodBtn = document.getElementById('deleteFoodBtn');
+        const resetFoodBtn = document.getElementById('resetFoodBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+        // 当前选中的分类（默认中餐）
+        let currentCategory = '中餐';
+        // 当前是否正在随机选择中
+        let isSelecting = false;
+        // 是否处于删除模式
+        let isDeleteMode = false;
+        // 临时保存删除前的数据
+        let tempFoodData = {};
+        // 标记要删除的索引
+        let deletedIndices = new Set();
+        // 随机选择定时器
+        let selectionTimer = null;
+        // 进度条定时器
+        let progressTimer = null;
+        // 已使用的美食索引（避免重复）
+        let usedIndices = new Set();
+
+        // 初始化
+        function init() {
+            // 页面初始化时隐藏状态文本
+            document.getElementById('statusText').style.display = 'none';
+            showFoodList();
+            setupEventListeners();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 分类按钮点击事件
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 如果正在随机选择中，不允许切换分类
+                    if (isSelecting) {
+                        statusText.textContent = '正在随机选择中，请稍后再切换分类';
+                        statusText.style.display = 'block';
+                        return;
+                    }
+
+                    // 退出删除模式
+                    if (isDeleteMode) {
+                        cancelDeleteMode();
+                    }
+
+                    // 更新活动状态
+                    categoryButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // 更新当前分类
+                    currentCategory = this.dataset.category;
+
+                    // 重置已使用索引（切换分类时清空）
+                    usedIndices.clear();
+
+                    // 显示该分类下的美食列表
+                    showFoodList();
+
+                    // 清除之前的选择结果
+                    resultFood.textContent = '点击按钮决定吃什么';
+                    resultFood.className = 'result-food no-result';
+                    statusText.style.display = 'none';
+                    progressBar.style.display = 'none';
+                });
+            });
+
+            // "我要吃"按钮点击事件
+            eatBtn.addEventListener('click', function() {
+                if (isSelecting) return;
+
+                // 退出删除模式
+                if (isDeleteMode) {
+                    cancelDeleteMode();
+                }
+
+                // 获取当前分类下的美食
+                const foods = foodData[currentCategory];
+
+                // 如果当前分类下没有美食
+                if (foods.length === 0) {
+                    resultFood.textContent = '当前分类下没有美食';
+                    resultFood.className = 'result-food no-result';
+                    return;
+                }
+
+                // 开始随机选择
+                startRandomSelection();
+            });
+
+            // 弹窗按钮事件
+            cancelBtn.addEventListener('click', hideModal);
+            confirmBtn.addEventListener('click', addNewFood);
+
+            // 点击弹窗背景关闭弹窗
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === modalOverlay) {
+                    hideModal();
+                }
+            });
+
+            // 回车键确认添加
+            modalInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addNewFood();
+                }
+            });
+
+            // 输入时清除错误状态
+            modalInput.addEventListener('input', function() {
+                modalInput.classList.remove('error');
+                modalError.style.display = 'none';
+            });
+
+            // ========== 新增：操作按钮事件 ==========
+            // 添加美食按钮
+            addFoodBtn.addEventListener('click', function() {
+                // 退出删除模式
+                if (isDeleteMode) {
+                    cancelDeleteMode();
+                }
+                showModal();
+            });
+
+            // 进入删除模式
+            deleteFoodBtn.addEventListener('click', enterDeleteMode);
+
+            // 重置美食列表
+            resetFoodBtn.addEventListener('click', resetFoodList);
+
+            // 取消删除
+            cancelDeleteBtn.addEventListener('click', cancelDeleteMode);
+
+            // 确认删除
+            confirmDeleteBtn.addEventListener('click', confirmDeleteFood);
+        }
+
+        // 显示当前分类下的美食列表
+        function showFoodList() {
+            const foods = foodData[currentCategory];
+
+            // 更新标题
+            foodListTitle.textContent = `${currentCategory}列表（${foods.length}种）`;
+
+            // 清空列表
+            foodList.innerHTML = '';
+
+            // 生成美食项
+            foods.forEach((food, index) => {
+                const item = document.createElement('div');
+                item.className = 'food-item';
+                // 如果是删除模式，添加删除标记
+                if (isDeleteMode && deletedIndices.has(index)) {
+                    item.classList.add('to-be-deleted');
+                    item.innerHTML = `${food} <span class="delete-icon">✕</span>`;
+                } else {
+                    item.textContent = food;
+                }
+                item.dataset.index = index;
+
+                // 点击美食项（删除模式下标记删除）
+                item.addEventListener('click', function() {
+                    if (isDeleteMode) {
+                        // 切换删除标记
+                        const idx = parseInt(this.dataset.index);
+                        if (deletedIndices.has(idx)) {
+                            deletedIndices.delete(idx);
+                            this.classList.remove('to-be-deleted');
+                            this.textContent = food;
+                        } else {
+                            deletedIndices.add(idx);
+                            this.classList.add('to-be-deleted');
+                            this.innerHTML = `${food} <span class="delete-icon">✕</span>`;
+                        }
+                    }
+                });
+
+                foodList.appendChild(item);
+            });
+        }
+
+        // ========== 新增：删除模式相关函数 ==========
+        // 进入删除模式
+        function enterDeleteMode() {
+            if (isSelecting) {
+                statusText.textContent = '正在随机选择中，请稍后再删除';
+                statusText.style.display = 'block';
+                return;
+            }
+
+            // 保存当前数据的副本
+            tempFoodData = JSON.parse(JSON.stringify(foodData));
+            deletedIndices.clear();
+            isDeleteMode = true;
+
+            // 切换按钮显示
+            foodActions.style.display = 'none';
+            deleteActions.style.display = 'flex';
+
+            // 更新状态提示
+            statusText.textContent = '请选择要删除的美食，点击确认完成删除';
+            statusText.style.display = 'block';
+
+            // 重新渲染列表（显示删除标记）
+            showFoodList();
+        }
+
+        // 取消删除模式
+        function cancelDeleteMode() {
+            // 恢复数据
+            foodData = tempFoodData;
+            deletedIndices.clear();
+            isDeleteMode = false;
+
+            // 切换按钮显示
+            foodActions.style.display = 'flex';
+            deleteActions.style.display = 'none';
+
+            // 更新状态提示
+            statusText.textContent = '已取消删除操作';
+            statusText.style.display = 'block';
+
+            // 重新渲染列表
+            showFoodList();
+        }
+
+        // 确认删除选中的美食
+        function confirmDeleteFood() {
+            if (deletedIndices.size === 0) {
+                statusText.textContent = '未选择任何要删除的美食';
+                statusText.style.display = 'block';
+                return;
+            }
+
+            // 按索引从大到小删除，避免索引错乱
+            const indices = Array.from(deletedIndices).sort((a, b) => b - a);
+            indices.forEach(index => {
+                foodData[currentCategory].splice(index, 1);
+            });
+
+            // 退出删除模式
+            isDeleteMode = false;
+            deletedIndices.clear();
+
+            // 切换按钮显示
+            foodActions.style.display = 'flex';
+            deleteActions.style.display = 'none';
+
+            // 更新状态提示
+            statusText.textContent = `已成功删除${indices.length}个美食`;
+            statusText.style.display = 'block';
+
+            // 重置已使用索引
+            usedIndices.clear();
+
+            // 清除选择结果
+            resultFood.textContent = '点击按钮决定吃什么';
+            resultFood.className = 'result-food no-result';
+
+            // 重新渲染列表
+            showFoodList();
+        }
+
+        // 重置美食列表到默认状态
+        function resetFoodList() {
+            if (isSelecting) {
+                statusText.textContent = '正在随机选择中，请稍后再重置';
+                statusText.style.display = 'block';
+                return;
+            }
+
+            // 退出删除模式
+            if (isDeleteMode) {
+                cancelDeleteMode();
+            }
+
+            // 恢复默认数据
+            foodData = JSON.parse(JSON.stringify(defaultFoodData));
+
+            // 重置已使用索引
+            usedIndices.clear();
+
+            // 更新状态提示
+            statusText.textContent = '已重置美食列表';
+            statusText.style.display = 'block';
+
+            // 清除选择结果
+            resultFood.textContent = '点击按钮决定吃什么';
+            resultFood.className = 'result-food no-result';
+
+            // 重新渲染列表
+            showFoodList();
+        }
+
+        // 显示弹窗
+        function showModal() {
+            modalOverlay.style.display = 'flex';
+            modalInput.value = '';
+            modalInput.classList.remove('error');
+            modalError.style.display = 'none';
+            modalInput.focus();
+        }
+
+        // 隐藏弹窗
+        function hideModal() {
+            modalOverlay.style.display = 'none';
+            modalInput.value = '';
+            modalInput.classList.remove('error');
+            modalError.style.display = 'none';
+        }
+
+        // 添加新美食
+        function addNewFood() {
+            const foodName = modalInput.value.trim();
+
+            // 验证输入
+            if (!foodName) {
+                showErrorMessage('请输入美食名称');
+                return;
+            }
+
+            // 检查是否已存在
+            if (foodData[currentCategory].includes(foodName)) {
+                showErrorMessage(`"${foodName}"已存在于${currentCategory}中`);
+                return;
+            }
+
+            // 添加到当前分类
+            foodData[currentCategory].push(foodName);
+
+            // 隐藏弹窗
+            hideModal();
+
+            // 重新显示列表
+            showFoodList();
+
+            // 显示成功消息
+            statusText.textContent = `已添加"${foodName}"到${currentCategory}`;
+            statusText.style.display = 'block';
+
+            // 清除随机选择结果
+            resultFood.textContent = '点击按钮决定吃什么';
+            resultFood.className = 'result-food no-result';
+        }
+
+        // 显示错误信息（在弹窗中）
+        function showErrorMessage(message) {
+            modalInput.classList.add('error');
+            modalError.textContent = message;
+            modalError.style.display = 'block';
+
+            // 输入框抖动效果
+            modalInput.animate([
+                { transform: 'translateX(0)' },
+                { transform: 'translateX(-5px)' },
+                { transform: 'translateX(5px)' },
+                { transform: 'translateX(0)' }
+            ], {
+                duration: 300,
+                iterations: 1
+            });
+
+            // 3秒后自动隐藏错误信息
+            setTimeout(() => {
+                if (modalError.textContent === message) {
+                    modalError.style.display = 'none';
+                    modalInput.classList.remove('error');
+                }
+            }, 3000);
+        }
+
+        // 开始随机选择
+        function startRandomSelection() {
+            isSelecting = true;
+            eatBtn.disabled = true;
+            // 添加loading类，显示加载图标
+            eatBtn.classList.add('loading');
+
+            // 显示进度条
+            progressBar.style.display = 'block';
+            progressFill.style.width = '0%';
+
+            // 重置所有美食项的样式
+            const foodItems = document.querySelectorAll('.food-item');
+            foodItems.forEach(item => {
+                item.classList.remove('selected', 'selecting');
+            });
+
+            // 清除结果
+            resultFood.textContent = '正在随机选择...';
+            resultFood.className = 'result-food';
+            statusText.textContent = '随机选择中，请稍候...';
+            statusText.style.display = 'block';
+
+            // 获取当前分类下的美食
+            const foods = foodData[currentCategory];
+
+            // 在当前分类下随机选择一个美食
+            const availableIndices = [];
+            for (let i = 0; i < foods.length; i++) {
+                if (!usedIndices.has(i)) {
+                    availableIndices.push(i);
+                }
+            }
+
+            // 如果当前分类下的所有美食都用过了，重置已使用集合
+            if (availableIndices.length === 0) {
+                usedIndices.clear();
+                availableIndices.push(...Array.from({length: foods.length}, (_, i) => i));
+            }
+
+            // 随机选择一个索引
+            const randomIndex = Math.floor(Math.random() * availableIndices.length);
+            const selectedFoodIndex = availableIndices[randomIndex];
+            const selectedFood = foods[selectedFoodIndex];
+
+            // 记录已使用
+            usedIndices.add(selectedFoodIndex);
+
+            // 随机选择动画
+            let currentIndex = 0;
+            const totalItems = foods.length;
+            const selectionDuration = 2500;
+            const interval = 80;
+
+            // 计算需要切换的次数
+            const totalSteps = Math.floor(selectionDuration / interval);
+            let currentStep = 0;
+
+            // 开始随机选择动画
+            selectionTimer = setInterval(() => {
+                // 移除之前选中的样式
+                if (currentIndex >= 0 && currentIndex < totalItems) {
+                    const prevItem = document.querySelector(`.food-item[data-index="${currentIndex}"]`);
+                    if (prevItem) {
+                        prevItem.classList.remove('selecting');
+                    }
+                }
+
+                // 随机选择下一个
+                currentIndex = Math.floor(Math.random() * totalItems);
+
+                // 添加选中样式
+                const currentItem = document.querySelector(`.food-item[data-index="${currentIndex}"]`);
+                if (currentItem) {
+                    currentItem.classList.add('selecting');
+                    // 滚动到当前选中的项
+                    currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                // 更新进度条
+                const progress = (currentStep / totalSteps) * 100;
+                progressFill.style.width = `${progress}%`;
+
+                currentStep++;
+
+                // 如果达到总步数，停止动画
+                if (currentStep >= totalSteps) {
+                    clearInterval(selectionTimer);
+                    finishSelection(selectedFoodIndex, selectedFood);
+                }
+            }, interval);
+        }
+
+        // 完成选择
+        function finishSelection(selectedFoodIndex, selectedFood) {
+            // 停止进度条更新
+            if (progressTimer) {
+                clearInterval(progressTimer);
+            }
+
+            // 移除所有选中样式
+            const foodItems = document.querySelectorAll('.food-item');
+            foodItems.forEach(item => {
+                item.classList.remove('selecting');
+            });
+
+            // 高亮显示最终选中的美食
+            const selectedItem = document.querySelector(`.food-item[data-index="${selectedFoodIndex}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
+                // 滚动到选中的项
+                selectedItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // 显示结果
+            resultFood.textContent = selectedFood;
+            statusText.textContent = '选择完成';
+            statusText.style.display = 'block';
+            progressFill.style.width = '100%';
+
+            // 重置按钮状态
+            isSelecting = false;
+            eatBtn.disabled = false;
+            // 移除loading类，隐藏加载图标
+            eatBtn.classList.remove('loading');
+
+            // 隐藏进度条
+            setTimeout(() => {
+                progressBar.style.display = 'none';
+                progressFill.style.width = '0%';
+            }, 200);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
